@@ -5,12 +5,12 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Hello World - Coding</title>
+    <title>Register Base Go ABI - Coding</title>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="google" content="notranslate" />
     <meta name="keywords" content="TriDiamond Obsidian,"> 
-    <meta name="description" content="This is for my own.,Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any pr,"> 
+    <meta name="description" content="This is for my own.,Register Base go Stack这是什么这个设计的目的是将原本基于Stack的函数调用协定改写为基于Register寄存器的调用协定，自一开始go发布到现在，就一直使用Plan 9 AB,"> 
     <meta name="author" content="Huanbing Lu"> 
     <link rel="alternative" href="atom.xml" title="Coding" type="application/atom+xml"> 
     <link rel="icon" href="/img/favicon.png"> 
@@ -57,7 +57,7 @@
     <div class="navigation animated fadeIn fast delay-1s">
         <img id="home-icon" class="icon-home" src="/img/favicon.png" alt="" data-url="http://example.com">
         <div id="play-icon" title="Play/Pause" class="iconfont icon-play"></div>
-        <h3 class="subtitle">Hello World</h3>
+        <h3 class="subtitle">Register Base Go ABI</h3>
         <div class="social">
             <!--        <div class="like-icon">-->
             <!--            <a href="javascript:;" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
@@ -89,22 +89,22 @@
                 
                 <a href="javascript:;"><b>「 </b>Article<b> 」</b></a>
                 
-                March 21, 2021
+                March 23, 2021
             </p>
-            <h3 class="post-title animated fadeInDown"><a href="/2021/03/21/hello-world/" title="Hello World" class="">Hello World</a>
+            <h3 class="post-title animated fadeInDown"><a href="/2021/03/23/Register-base-go-stack/" title="Register Base Go ABI" class="">Register Base Go ABI</a>
             </h3>
             
             <p class="post-count animated fadeInDown">
                 
                 <span>
                     <b class="iconfont icon-text2"></b> <i>Words count</i>
-                    2.2k
+                    5k
                 </span>
                 
                 
                 <span>
                     <b class="iconfont icon-timer__s"></b> <i>Reading time</i>
-                    2 mins.
+                    5 mins.
                 </span>
                 
                 
@@ -136,19 +136,68 @@
 <div class="article">
     <div class='main'>
         <div class="content markdown animated fadeIn">
-            <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+            <h1 id="Register-Base-go-Stack"><a href="#Register-Base-go-Stack" class="headerlink" title="Register Base go Stack"></a>Register Base go Stack</h1><h2 id="这是什么"><a href="#这是什么" class="headerlink" title="这是什么"></a>这是什么</h2><p>这个设计的目的是将原本基于Stack的函数调用协定改写为基于Register寄存器的调用协定，自一开始go发布到现在，就一直使用Plan 9 ABI的基于堆栈的调用约定，其中参数和结果值通过堆栈上的内存传递。<br>好处是，调用约定的规则很简单，并且建立在现有结构布局规则的基础上；所有平台都可以使用基本上相同的约定，所以比较容易编写跨平台，可移植的编译器和运行时代码，这也简化了go和defer语句以及反射的实现。此外，当前的go ABI还没有使用寄存器传递函数参数，也就意味着在函数调用中没有寄存器内容存在，而使用堆栈调用协定，在调用之前，函数中的任何活动状态都必须刷新到堆栈中。所以stack的方式简化了在GC，堆栈增长以及展开的tracing&amp;&amp;profiling。</p>
+<h2 id="为什么要这么改"><a href="#为什么要这么改" class="headerlink" title="为什么要这么改"></a>为什么要这么改</h2><p>go的基于堆栈的调用约定在桌面上留下了很多性能。尽管现代高性能CPU在很大程度上优化了堆栈访问，但是访问寄存器中的参数仍比访问堆栈中的参数快40％。此外，基于堆栈的调用约定，尤其是没有被调用者保存寄存器的调用约定，会引起额外的内存通信，这会对总体性能产生次要影响。</p>
+<h2 id="有什么痛点"><a href="#有什么痛点" class="headerlink" title="有什么痛点"></a>有什么痛点</h2><p>golang在官方<a target="_blank" rel="noopener" href="https://github.com/golang/go/issues/40724">issue</a> 中，给出了目前在主线分支中针对stack base做出的修改。目前只是在amd64平台上进行最小修改，后面继续再扩展到其他平台上。</p>
+<p>但是这里有两个比较重要的问题需要解决，第一个是goroutine本身的缩扩容是因为go runtime可以动态调整堆栈大小，这里不仅给跨平台ABI提出了棘手的设计，也给ebpf追踪go调用提高了难度，而第二个问题是goroutine本身是由go runtime调度，而不是OS内核进行调度，这意味着非go代码和go代码中的转换如果是通过平台ABI可以无缝切换。</p>
+<p>现有的大多数ABI都是基于C语言的，它在重要方面与go有所不同。例如，大多数ELF ABI（至少x64-64，ARM64和RISC-V）会强制go片在堆栈上而不是在寄存器中传递，因为片头是3个字。同样，由于C函数很少返回一个以上的字，因此大多数平台ABI最多为结果保留两个寄存器。由于go函数通常至少返回三个字（结果和两个字的错误接口值），因此平台ABI将强制此类函数在堆栈上返回值。影响平台ABI的其他因素包括C中的数组参数通过引用而不是通过值传递，并且C中的小整数类型被提升为int而不是保留其类型。因此，平台ABI根本不适合go语言。</p>
+<h2 id="目前是如何设计"><a href="#目前是如何设计" class="headerlink" title="目前是如何设计"></a>目前是如何设计</h2><ul>
+<li>Proposal中建议每种体系结构都应定义一个整数和浮点寄存器（以及将来可能的矢量寄存器）序列，再加上大小和对齐约束。</li>
+<li>支持多字返回值。</li>
+<li>支持在堆栈增长时扫描和调整寄存器参数中的指针。</li>
+<li>一流的通用调用框架表示形式。 go和defer语句以及反射调用需要将调用帧作为的内存对象进行操作的第一公民。</li>
+<li>No callee-save registers。</li>
+<li>be compatible with platform frame-pointer unwinding rules。</li>
+</ul>
+<p>值得注意的是，go版本之间没有二进制兼容性。这对于C的共享库很重要，但是go要求一个进程中的所有共享库都使用相同的go工具链版本。</p>
+<h2 id="Go相关工具链"><a href="#Go相关工具链" class="headerlink" title="Go相关工具链"></a>Go相关工具链</h2><ul>
+<li>Compiler<ul>
+<li>Abstract argument registers</li>
+<li>Late call lowering</li>
+<li>ABI bridges</li>
+<li>Argument GC map</li>
+<li>Traceback argument maps</li>
+<li>DWARF locations</li>
+<li>Clobber</li>
+</ul>
+  最后作者建议编译器应该发出两个逻辑映射，一个从PC到Register，另一个用户态映射参数索引到stack</li>
+<li>Linker<ul>
+<li>Eliminate ABI aliases</li>
+<li>ABI name mangling</li>
+</ul>
+</li>
+<li>Runtime<ul>
+<li>First-class call frame representation</li>
+<li>Stack growth</li>
+<li>Runtime assembly</li>
+<li>Cgo wrappers</li>
+<li>Stack unwinding for panic recovery</li>
+<li>Traceback argument printing</li>
+</ul>
+</li>
+</ul>
+<p>如果阅读了上面的issue页面，实际上会发现，这里给出的相关工具链实际上也是register base ABI设计的核心修改部分</p>
+<h2 id="详细设计"><a href="#详细设计" class="headerlink" title="详细设计"></a>详细设计</h2><blockquote>
+<p>go, defer and reflection calls</p>
+</blockquote>
+<ol>
+<li>go和defer调用的类型是静态已知的，而反射调用则不是。这意味着编译器可以静态生成用于解go和defer调用参数的桥，但这不是反射调用的玩法。</li>
+<li>go和defer调用的返回值始终被忽略，而反射调用必须捕获结果。这意味着进行或延迟呼叫的呼叫桥可以是尾部呼叫，而反射呼叫可能需要按组返回值。</li>
+<li>go和defer呼叫帧是长期存在的，而反射呼叫帧是瞬态的。这意味着垃圾收集器必须能够扫描go和推迟调用帧，而我们可以将不可抢占的区域用于反射调用。</li>
+<li>go调用框架直接存储在堆栈中，而defer和reflect调用框架可以在堆中构造。这意味着垃圾回收器必须能够为go调用帧构造适当的堆栈映射，但是defer和reflect调用帧可以使用堆位图。这也意味着需要堆栈参数的延迟和反射调用必须将调用帧的那一部分从堆复制到堆栈。</li>
+</ol>
+<p>设计的调用帧如下所示</p>
+<pre class="line-numbers language-go" data-language="go"><code class="language-go"><span class="token keyword">struct</span> <span class="token punctuation">&#123;</span>
+    pc           <span class="token builtin">uintptr</span>          <span class="token comment">// PC of target function</span>
+    nInt<span class="token punctuation">,</span> nFloat <span class="token builtin">uintptr</span>          <span class="token comment">// # of int and float registers</span>
+    ints         <span class="token punctuation">[</span>nInt<span class="token punctuation">]</span><span class="token builtin">uintptr</span>    <span class="token comment">// Int registers</span>
+    floats       <span class="token punctuation">[</span>nFloat<span class="token punctuation">]</span><span class="token builtin">uint64</span>   <span class="token comment">// Float registers</span>
+    ctxt         <span class="token builtin">uintptr</span>          <span class="token comment">// Context register</span>
+    stack        <span class="token punctuation">[</span><span class="token operator">...</span><span class="token punctuation">]</span><span class="token builtin">uintptr</span>     <span class="token comment">// Stack arguments/result space</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<p>go调用可以在新的goroutine堆栈上构建此结构，而调用桥可以从堆栈中弹出此结构的寄存器部分，仅将堆栈部分保留在堆栈上，并进行尾调用pc。垃圾收集器可以通过检查调用帧中的pc来识别此调用桥并构建堆栈映射。</p>
+<p>defer和reflect调用可以使用适当的堆位图在堆中构建帧。在这种情况下，调用桥必须打开一个新的堆栈帧，将堆栈复制到堆栈中，加载寄存器参数，调用pc，然后将寄存器结果和堆栈结果复制回堆中帧（必要时使用写屏障） ）。在仅寄存器反射调用的情况下，网桥可以将寄存器参数作为参数本身，并返回寄存器结果作为结果。这可以避免任何复制或写入障碍。</p>
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls"
@@ -214,7 +263,7 @@
             <div class="box sticky animated fadeInRight faster">
                 <div id="toc" class="subbox">
                     <h4>Contents</h4>
-                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Quick-Start"><span class="toc-number">1.</span> <span class="toc-text">Quick Start</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Create-a-new-post"><span class="toc-number">1.1.</span> <span class="toc-text">Create a new post</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Run-server"><span class="toc-number">1.2.</span> <span class="toc-text">Run server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Generate-static-files"><span class="toc-number">1.3.</span> <span class="toc-text">Generate static files</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deploy-to-remote-sites"><span class="toc-number">1.4.</span> <span class="toc-text">Deploy to remote sites</span></a></li></ol></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Register-Base-go-Stack"><span class="toc-number">1.</span> <span class="toc-text">Register Base go Stack</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.1.</span> <span class="toc-text">这是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E4%B9%88%E6%94%B9"><span class="toc-number">1.2.</span> <span class="toc-text">为什么要这么改</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%89%E4%BB%80%E4%B9%88%E7%97%9B%E7%82%B9"><span class="toc-number">1.3.</span> <span class="toc-text">有什么痛点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E5%89%8D%E6%98%AF%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.4.</span> <span class="toc-text">目前是如何设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Go%E7%9B%B8%E5%85%B3%E5%B7%A5%E5%85%B7%E9%93%BE"><span class="toc-number">1.5.</span> <span class="toc-text">Go相关工具链</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%A6%E7%BB%86%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.6.</span> <span class="toc-text">详细设计</span></a></li></ol></li></ol>
                 </div>
             </div>
             
